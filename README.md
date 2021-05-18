@@ -16,3 +16,6 @@ After launching the model in gazebo, use the following publish message to trigge
 ```sh
 rostopic pub -1 /parachute_plugin/box std_msgs/Bool -- 1
 ```
+
+dependencies : 
+As of now it requires the liftdrag plugin ( to be installed by building the px4 package)
