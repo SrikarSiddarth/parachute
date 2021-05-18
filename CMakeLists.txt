@@ -142,18 +142,18 @@ link_directories(
 # Message Generation #
 #--------------------#
 
-set(physics_msgs msgs/Wind.proto)
+set(physics2_msgs msgs/Wind.proto)
 
-PROTOBUF_GENERATE_CPP(PHY_PROTO_SRCS PHY_PROTO_HDRS ${physics_msgs})
+PROTOBUF_GENERATE_CPP(PHY_PROTO_SRCS PHY_PROTO_HDRS ${physics2_msgs})
 
-add_library(physics_msgs SHARED ${PHY_PROTO_SRCS})
+add_library(physics2_msgs SHARED ${PHY_PROTO_SRCS})
 
 
 #---------#
 # Plugins #
 #---------#
 
-link_libraries(physics_msgs)
+link_libraries(physics2_msgs)
 add_library(test_parachute SHARED src/gazebo_parachute_plugin.cpp)
 
 set(plugins
@@ -168,5 +168,5 @@ target_link_libraries(test_parachute ${catkin_LIBRARIES})
 
 
 foreach(plugin ${plugins})
-  add_dependencies(${plugin} physics_msgs)
+  add_dependencies(${plugin} physics2_msgs)
 endforeach()

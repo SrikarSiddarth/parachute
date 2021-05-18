@@ -52,11 +52,11 @@ namespace gazebo
 
 
 
-class GAZEBO_VISIBLE ParachutePlugin : public ModelPlugin
+class GAZEBO_VISIBLE StandAloneParachutePlugin : public ModelPlugin
 {
 public:
-  ParachutePlugin();
-  virtual ~ParachutePlugin();
+  StandAloneParachutePlugin();
+  virtual ~StandAloneParachutePlugin();
 
   void Load(physics::ModelPtr model, sdf::ElementPtr sdf);
   void OnUpdate(const common::UpdateInfo&);
@@ -94,6 +94,6 @@ private:
   transport::NodePtr node_handle_;
   transport::SubscriberPtr trigger_sub_;
 
-};     // class GAZEBO_VISIBLE ParachutePlugin
+};     // class GAZEBO_VISIBLE StandAloneParachutePlugin
 }      // namespace gazebo
 #endif // _GAZEBO_PARACHUTE_PLUGIN_HH_

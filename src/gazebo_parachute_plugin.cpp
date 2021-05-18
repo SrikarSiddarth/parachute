@@ -30,22 +30,20 @@
 #include <std_msgs/Bool.h>
 
 namespace gazebo {
-GZ_REGISTER_MODEL_PLUGIN(ParachutePlugin)
+GZ_REGISTER_MODEL_PLUGIN(StandAloneParachutePlugin)
 
-ParachutePlugin::ParachutePlugin() : ModelPlugin()
+StandAloneParachutePlugin::StandAloneParachutePlugin() : ModelPlugin()
 {
 }
 
-ParachutePlugin::~ParachutePlugin()
+StandAloneParachutePlugin::~StandAloneParachutePlugin()
 {
   update_connection_->~Connection();
 }
 
-    void ParachutePlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
+    void StandAloneParachutePlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
     {
       model_ = model;
-//        model_ = GetModelPtr("box");
-//        ROS_WARN("MODEL NAME IS %s",model->GetName());
       world_ = model_->GetWorld();
 
       namespace_.clear();
@@ -63,7 +61,7 @@ ParachutePlugin::~ParachutePlugin()
 
 
       // Listen to the update event. This event is broadcast every simulation iteration.
-      update_connection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&ParachutePlugin::OnUpdate, this, _1));
+      update_connection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&StandAloneParachutePlugin::OnUpdate, this, _1));
 
       node_handle_ = transport::NodePtr(new transport::Node());
       node_handle_->Init(namespace_);
@@ -77,23 +75,22 @@ ParachutePlugin::~ParachutePlugin()
       ros::SubscribeOptions so = ros::SubscribeOptions::create<std_msgs::Bool>(
         trigTopic_,
         1,
-        boost::bind(&ParachutePlugin::onRosMsg, this, _1),
+        boost::bind(&StandAloneParachutePlugin::onRosMsg, this, _1),
         ros::VoidPtr(),
         &this->rosQueue
         );
        this->rosSub = this->rosNode->subscribe(so);
-       this->rosQueueThread = std::thread(std::bind(&ParachutePlugin::QueueThread,this));
+       this->rosQueueThread = std::thread(std::bind(&StandAloneParachutePlugin::QueueThread,this));
     }
 
-    void ParachutePlugin::onRosMsg(const std_msgs::Bool::ConstPtr& _msg){
+    void StandAloneParachutePlugin::onRosMsg(const std_msgs::Bool::ConstPtr& _msg){
         this->trig = _msg->data;
     }
 
-    void ParachutePlugin::OnUpdate(const common::UpdateInfo&){
+    void StandAloneParachutePlugin::OnUpdate(const common::UpdateInfo&){
 
-        physics::ModelPtr parachute_model = GetModelPtr("parachute_small");
-        //Trigger parachute if flight termination
-//        if(ref_motor_rot_vel_ <= terminate_rot_vel_ || ref_motor_rot_vel_ >= -1*terminate_rot_vel_) LoadParachute();
+        physics::ModelPtr parachute_model = GetModelPtr("parachute");
+
         if (this->trig) LoadParachute();
         if(!attached_parachute_ && parachute_model){
         AttachParachute(parachute_model); //Attach parachute to model
@@ -101,19 +98,19 @@ ParachutePlugin::~ParachutePlugin()
         }
     }
 
-    void ParachutePlugin::LoadParachute(){
+    void StandAloneParachutePlugin::LoadParachute(){
         // Don't create duplicate paracutes
-        physics::ModelPtr parachute_model = GetModelPtr("parachute_small");
+        physics::ModelPtr parachute_model = GetModelPtr("parachute");
         if(parachute_model) return;
 
         // Insert parachute model
-        world_->InsertModelFile("model://parachute_small");
+        world_->InsertModelFile("model://parachute");
         msgs::Int request;
         request.set_data(0);
 
     }
 
-    physics::ModelPtr ParachutePlugin::GetModelPtr(std::string model_name){
+    physics::ModelPtr StandAloneParachutePlugin::GetModelPtr(std::string model_name){
         physics::ModelPtr model;
 
         #if GAZEBO_MAJOR_VERSION >= 9
@@ -125,7 +122,7 @@ ParachutePlugin::~ParachutePlugin()
 
     }
 
-    void ParachutePlugin::AttachParachute(physics::ModelPtr &parachute_model){
+    void StandAloneParachutePlugin::AttachParachute(physics::ModelPtr &parachute_model){
 
         #if GAZEBO_MAJOR_VERSION >= 9
           const ignition::math::Pose3d vehicle_pose = model_->WorldPose();
@@ -158,7 +155,7 @@ ParachutePlugin::~ParachutePlugin()
           parachute_joint->Load(base_link, parachute_link, ignition::math::Pose3d(0, 0, 0.3, 0, 0, 0));
     }
 
-    void ParachutePlugin::QueueThread()
+    void StandAloneParachutePlugin::QueueThread()
 		{
 		  static const double timeout = 0.01;
 		  while (this->rosNode->ok())
