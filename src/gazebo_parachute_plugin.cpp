@@ -44,6 +44,8 @@ StandAloneParachutePlugin::~StandAloneParachutePlugin()
     void StandAloneParachutePlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
     {
       model_ = model;
+//        model_ = GetModelPtr("box");
+//        ROS_WARN("MODEL NAME IS %s",model->GetName());
       world_ = model_->GetWorld();
 
       namespace_.clear();
@@ -90,7 +92,8 @@ StandAloneParachutePlugin::~StandAloneParachutePlugin()
     void StandAloneParachutePlugin::OnUpdate(const common::UpdateInfo&){
 
         physics::ModelPtr parachute_model = GetModelPtr("parachute");
-
+        //Trigger parachute if flight termination
+//        if(ref_motor_rot_vel_ <= terminate_rot_vel_ || ref_motor_rot_vel_ >= -1*terminate_rot_vel_) LoadParachute();
         if (this->trig) LoadParachute();
         if(!attached_parachute_ && parachute_model){
         AttachParachute(parachute_model); //Attach parachute to model
@@ -101,12 +104,18 @@ StandAloneParachutePlugin::~StandAloneParachutePlugin()
     void StandAloneParachutePlugin::LoadParachute(){
         // Don't create duplicate paracutes
         physics::ModelPtr parachute_model = GetModelPtr("parachute");
-        if(parachute_model) return;
+        if(parachute_model){
+		std::cout<<"*************** Parachute already exists.... *****************";
+		return;
+	}
 
         // Insert parachute model
         world_->InsertModelFile("model://parachute");
+		
+	std::cout<<"#######################PARACHUTE MODEL INSERTED!!!###################################";
         msgs::Int request;
         request.set_data(0);
+	this->trig = 0;
 
     }
 
@@ -143,14 +152,18 @@ StandAloneParachutePlugin::~StandAloneParachutePlugin()
         #else
           gazebo::physics::JointPtr parachute_joint = world_->GetPhysicsEngine()->CreateJoint("fixed", model_);
         #endif
+	
+	ROS_WARN("O");
 
           parachute_joint->SetName("parachute_joint");
-
+	ROS_WARN("A");
           // Attach parachute to base_link
           gazebo::physics::LinkPtr base_link = model_->GetLink("base_link");
+	ROS_WARN("M");
           gazebo::physics::LinkPtr parachute_link = parachute_model->GetLink("chute");
+	ROS_WARN("I");
           parachute_joint->Attach(base_link, parachute_link);
-
+			std::cout<<"PARACHUTE ATTACHED!!!";
           // load the joint, and set up its anchor point
           parachute_joint->Load(base_link, parachute_link, ignition::math::Pose3d(0, 0, 0.3, 0, 0, 0));
     }
