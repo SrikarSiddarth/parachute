@@ -28,6 +28,7 @@
 #include "ros/subscribe_options.h"
 #include "gazebo_parachute_plugin.h"
 #include <std_msgs/Bool.h>
+#include <gazebo_ros_link_attacher/Attach.h>
 
 namespace gazebo {
 GZ_REGISTER_MODEL_PLUGIN(StandAloneParachutePlugin)
@@ -92,8 +93,6 @@ StandAloneParachutePlugin::~StandAloneParachutePlugin()
     void StandAloneParachutePlugin::OnUpdate(const common::UpdateInfo&){
 
         physics::ModelPtr parachute_model = GetModelPtr("parachute");
-        //Trigger parachute if flight termination
-//        if(ref_motor_rot_vel_ <= terminate_rot_vel_ || ref_motor_rot_vel_ >= -1*terminate_rot_vel_) LoadParachute();
         if (this->trig) LoadParachute();
         if(!attached_parachute_ && parachute_model){
         AttachParachute(parachute_model); //Attach parachute to model
@@ -105,14 +104,14 @@ StandAloneParachutePlugin::~StandAloneParachutePlugin()
         // Don't create duplicate paracutes
         physics::ModelPtr parachute_model = GetModelPtr("parachute");
         if(parachute_model){
-		std::cout<<"*************** Parachute already exists.... *****************";
+		std::cout<<"*************** Parachute already exists.... *****************\n";
 		return;
 	}
 
         // Insert parachute model
         world_->InsertModelFile("model://parachute");
 		
-	std::cout<<"#######################PARACHUTE MODEL INSERTED!!!###################################";
+	std::cout<<"#######################PARACHUTE MODEL INSERTED!!!###################################\n";
         msgs::Int request;
         request.set_data(0);
 	this->trig = 0;
@@ -147,25 +146,38 @@ StandAloneParachutePlugin::~StandAloneParachutePlugin()
 //        ROS_WARN("Actual Position = [%f,%f,%f]",pose.pos.x,pose.pos.y,pose.pos.z);
 //        parachute_model->SetLinkWorldPose(gazebo::math::Pose(pose._x.pose._y,pose._z+0.3,0,0,0),)
 
-        #if GAZEBO_MAJOR_VERSION >= 9
-          gazebo::physics::JointPtr parachute_joint = world_->Physics()->CreateJoint("fixed", model_);
-        #else
-          gazebo::physics::JointPtr parachute_joint = world_->GetPhysicsEngine()->CreateJoint("fixed", model_);
-        #endif
-	
-	ROS_WARN("O");
+//        #if GAZEBO_MAJOR_VERSION >= 9
+//          gazebo::physics::JointPtr parachute_joint = world_->Physics()->CreateJoint("fixed", model_);
+//        #else
+//          gazebo::physics::JointPtr parachute_joint = world_->GetPhysicsEngine()->CreateJoint("fixed", model_);
+//        #endif
+//	
+//	ROS_WARN("O");
 
-          parachute_joint->SetName("parachute_joint");
-	ROS_WARN("A");
-          // Attach parachute to base_link
-          gazebo::physics::LinkPtr base_link = model_->GetLink("base_link");
-	ROS_WARN("M");
-          gazebo::physics::LinkPtr parachute_link = parachute_model->GetLink("chute");
-	ROS_WARN("I");
-          parachute_joint->Attach(base_link, parachute_link);
-			std::cout<<"PARACHUTE ATTACHED!!!";
-          // load the joint, and set up its anchor point
-          parachute_joint->Load(base_link, parachute_link, ignition::math::Pose3d(0, 0, 0.3, 0, 0, 0));
+//          parachute_joint->SetName("parachute_joint");
+//	ROS_WARN("A");
+//          // Attach parachute to base_link
+//          gazebo::physics::LinkPtr base_link = model_->GetLink("base_link");
+//	ROS_WARN("M");
+//          gazebo::physics::LinkPtr parachute_link = parachute_model->GetLink("chute");
+//	ROS_WARN("I");
+//          parachute_joint->Attach(base_link, parachute_link);
+//	ROS_WARN("PARACHUTE ATTACHED!!!");
+//          // load the joint, and set up its anchor point
+//          parachute_joint->Load(base_link, parachute_link, ignition::math::Pose3d(0, 0, 0.3, 0, 0, 0));
+	ros::ServiceClient attachParachute = this->rosNode->serviceClient<gazebo_ros_link_attacher::Attach>("/link_attacher_node/attach");
+	gazebo_ros_link_attacher::Attach srv;
+	srv.request.model_name_1 = model_->GetName();
+	srv.request.link_name_1 = "base_link";
+	srv.request.model_name_2 = "parachute";
+	srv.request.link_name_2 = "chute";
+	if (attachParachute.call(srv)){
+		ROS_INFO("Parachute Attach Service call: %s!",srv.response.ok?"Success":"Failed");
+	}
+	else{
+		ROS_INFO("Parachute Attach Service Failed!");	
+	}
+
     }
 
     void StandAloneParachutePlugin::QueueThread()

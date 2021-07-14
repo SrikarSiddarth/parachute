@@ -22,7 +22,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 #include(EnableC++XX)
 
 ## System dependencies are found with CMake's conventions
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs gazebo_ros)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs gazebo_ros gazebo_ros_link_attacher)
 find_package(Boost 1.58 REQUIRED COMPONENTS system thread filesystem)
 find_package(gazebo REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -52,7 +52,7 @@ catkin_package(
             roscpp
             )
 catkin_package(
-    CATKIN_DEPENDS std_msgs
+    CATKIN_DEPENDS std_msgs gazebo_ros_link_attacher
 )
 include_directories(include ${catkin_INCLUDE_DIRS})
 
