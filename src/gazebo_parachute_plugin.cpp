@@ -131,16 +131,20 @@ StandAloneParachutePlugin::~StandAloneParachutePlugin()
     }
 
     void StandAloneParachutePlugin::AttachParachute(physics::ModelPtr &parachute_model){
-
+	
+	ignition::math::Pose3d chute_pose = parachute_model->WorldPose();
+	ROS_WARN("Parachute Spawned at [%f,%f,%f]",chute_pose.Pos().X(), chute_pose.Pos().Y(), chute_pose.Pos().Z());
         #if GAZEBO_MAJOR_VERSION >= 9
-          const ignition::math::Pose3d vehicle_pose = model_->WorldPose();
+          ignition::math::Pose3d vehicle_pose = model_->WorldPose();
 
         #else
-          const ignition::math::Pose3d vehicle_pose = ignitionFromGazeboMath(model_->GetWorldPose()); //TODO(burrimi): Check tf.
+          ignition::math::Pose3d vehicle_pose = ignitionFromGazeboMath(model_->GetWorldPose()); //TODO(burrimi): Check tf.
 
         #endif
           parachute_model->SetWorldPose(ignition::math::Pose3d(vehicle_pose.Pos().X(), vehicle_pose.Pos().Y(), vehicle_pose.Pos().Z()+0.3, 0, 0, 0));        // or use uavPose.ros.GetYaw() ?
-        ROS_WARN("Parachute Spawned at [%f,%f,%f]",vehicle_pose.Pos().X(), vehicle_pose.Pos().Y(), vehicle_pose.Pos().Z()+0.3);
+        ROS_WARN("Parachute reset to [%f,%f,%f]",vehicle_pose.Pos().X(), vehicle_pose.Pos().Y(), vehicle_pose.Pos().Z()+0.3);
+	chute_pose = parachute_model->WorldPose();
+	ROS_WARN("Parachute's new position: [%f,%f,%f]",chute_pose.Pos().X(), chute_pose.Pos().Y(), chute_pose.Pos().Z());
 //        const gazebo::math::Pose pose;
 //        pose = model_->GetWorldPose();
 //        ROS_WARN("Actual Position = [%f,%f,%f]",pose.pos.x,pose.pos.y,pose.pos.z);
@@ -165,6 +169,10 @@ StandAloneParachutePlugin::~StandAloneParachutePlugin()
 //	ROS_WARN("PARACHUTE ATTACHED!!!");
 //          // load the joint, and set up its anchor point
 //          parachute_joint->Load(base_link, parachute_link, ignition::math::Pose3d(0, 0, 0.3, 0, 0, 0));
+//	vehicle_pose = model_->WorldPose();
+//	ROS_WARN("Probe before attachment at [%f,%f,%f]",vehicle_pose.Pos().X(), vehicle_pose.Pos().Y(), vehicle_pose.Pos().Z());
+	chute_pose = parachute_model->WorldPose();
+	ROS_WARN("Parachute before attachment at [%f,%f,%f]",chute_pose.Pos().X(), chute_pose.Pos().Y(), chute_pose.Pos().Z());
 	ros::ServiceClient attachParachute = this->rosNode->serviceClient<gazebo_ros_link_attacher::Attach>("/link_attacher_node/attach");
 	gazebo_ros_link_attacher::Attach srv;
 	srv.request.model_name_1 = model_->GetName();
@@ -177,7 +185,10 @@ StandAloneParachutePlugin::~StandAloneParachutePlugin()
 	else{
 		ROS_INFO("Parachute Attach Service Failed!");	
 	}
-
+//	vehicle_pose = model_->WorldPose();
+//	ROS_WARN("Probe after attachment at [%f,%f,%f]",vehicle_pose.Pos().X(), vehicle_pose.Pos().Y(), vehicle_pose.Pos().Z());
+	chute_pose = parachute_model->WorldPose();
+	ROS_WARN("Parachute after attachment at [%f,%f,%f]",chute_pose.Pos().X(), chute_pose.Pos().Y(), chute_pose.Pos().Z());
     }
 
     void StandAloneParachutePlugin::QueueThread()
